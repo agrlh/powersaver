@@ -1,0 +1,25 @@
+# XBMC settings
+xbmc = {"username":"xbmc", 
+        "password":"xbmc",
+        "host"    :"localhost",
+        "port"    :"9262" }
+# SABnzbd api key
+sabapi = "12345"
+# The following ports/services will be checked for connected devices on the 
+# local network
+services = {"2222": "SSH",
+            "445":  "SAMBA",
+            "1495": "UPNP",
+            "8081": "Sickbeard",
+            "5050": "CouchPotato"}
+# Keywords to check in the netstat output if a connection is established etc.
+conKeys = ["ESTABLISHED"
+           "VERBUNDEN",
+           "FIN_WAIT1",
+           "TIME_WAIT"]
+# Everydays wakeup time will be set using rtcwake command
+# If commented out, no rtc waketime will be set
+wakeTime = "07:01"
+# log settings
+logLines = 500
+logFile = "/var/log/powersaver.log"
