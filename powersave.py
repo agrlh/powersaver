@@ -96,9 +96,9 @@ def setWakeUp(wakeTime):
     if "wakeup" in rtc[0]:
         logging.info("Wake-up set to: %s." % datetime.fromtimestamp(wtime).strftime('%B %d, %H:%M') )
     else:
-        logging.debug("ERROR setting up wake-up time!")
+        logging.debug("DEBUG :: ERROR setting up wake-up time!")
         for s in rtc:
-            logging.debug("  " + s.replace('\n',''))
+            logging.debug("DEBUG ::   " + s.replace('\n',''))
 
 def pruneLog():
     lines = Popen(["tail","-n",str(config.logLines),config.logFile], stdout = PIPE)
@@ -117,7 +117,7 @@ def shutdown():
             logging.info("Will shutdown now using system command.")
             Popen(["shutdown","-h","now"])
     else:
-        logging.debug("Would shutdown now.")
+        logging.debug("DEBUG :: Would shutdown now.")
 
 ###########
 # Methods #
@@ -128,7 +128,7 @@ def xbmcIsIdle():
         return True
     xbmc = xbmcCommand("XBMC.GetInfoBooleans", {"booleans": ["System.ScreenSaverActive"]})
     if xbmc['result']['System.ScreenSaverActive']:
-        logging.debug("XBMC screensaver is active.")
+        logging.debug("DEBUG :: XBMC screensaver is active.")
         return True
     else:
         logging.info("XBMC is or was in use.")
@@ -151,7 +151,7 @@ def xbmcIsPlaying():
                 logging.info("XBMC is playing: %s." % item['label'])
         return True
     else:
-        logging.debug("XBMC is not playing.")
+        logging.debug("DEBUG :: XBMC is not playing.")
         return False
 
 def xbmcIsScanning():
@@ -162,7 +162,7 @@ def xbmcIsScanning():
         logging.info("XBMC is updating the library.")
         return True
     else:
-        logging.debug("XBMC is not updating the library.")
+        logging.debug("DEBUG :: XBMC is not updating the library.")
         return False
 
 def activeConnections():
@@ -211,7 +211,7 @@ def activeSABnzbd():
     response = urllib2.urlopen(req)
     result = json.loads(response.read())
     if result['state'] == u'IDLE':
-        logging.debug("SABnzbd is IDLE. Checking history for processing jobs.")
+        logging.debug("DEBUG :: SABnzbd is IDLE. Checking history for processing jobs.")
         # do history check if processing is going on
         params = {'apikey': config.sabapi,
                   'mode':   'history',
@@ -225,7 +225,7 @@ def activeSABnzbd():
         job = hresult['history']['slots'][0]
         status = job['status']
         if status == u"Completed" or status == u"Failed":
-            logging.debug("SABnzbd history is %s." % status)
+            logging.debug("DEBUG :: SABnzbd history is %s." % status)
             return False
         else:
             logging.info("SABnzbd is %s a download: %s" % (status, job['name']))
@@ -255,11 +255,11 @@ if __name__ == '__main__':
     CON_ACTIVE   = activeConnections()
     SAB_ACTIVE   = activeSABnzbd()
 
-    logging.debug("XBMC_IDLE:    %s" % XBMC_IDLE)
-    logging.debug("XBMC_PLAY:    %s" % XBMC_PLAYING)
-    logging.debug("XBMC_SCAN:    %s" % XBMC_SCAN)
-    logging.debug("CON_ACTIVE:   %s" % CON_ACTIVE)
-    logging.debug("SAB_ACTIVE:   %s" % SAB_ACTIVE)
+    logging.debug("DEBUG :: XBMC_IDLE:    %s" % XBMC_IDLE)
+    logging.debug("DEBUG :: XBMC_PLAY:    %s" % XBMC_PLAYING)
+    logging.debug("DEBUG :: XBMC_SCAN:    %s" % XBMC_SCAN)
+    logging.debug("DEBUG :: CON_ACTIVE:   %s" % CON_ACTIVE)
+    logging.debug("DEBUG :: SAB_ACTIVE:   %s" % SAB_ACTIVE)
 
     pruneLog()
 
