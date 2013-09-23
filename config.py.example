@@ -13,7 +13,7 @@ services = {"2222": "SSH",
             "8081": "Sickbeard",
             "5050": "CouchPotato"}
 # Keywords to check in the netstat output if a connection is established etc.
-conKeys = ["ESTABLISHED"
+conKeys = ["ESTABLISHED",
            "VERBUNDEN",
            "FIN_WAIT1",
            "TIME_WAIT"]
