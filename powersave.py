@@ -13,9 +13,11 @@ import config
 # PARSE ARGS - Set log level #
 ##############################
 loglevel = logging.INFO
+DEBUG = False
 if len(sys.argv) > 1:
     if sys.argv[1] == "debug":
         loglevel = logging.DEBUG
+        DEBUG = True
 
 logging.basicConfig(filename=config.logFile,
                     filemode='a',
@@ -105,14 +107,17 @@ def pruneLog():
         prunedLog.write(lines)
 
 def shutdown():
-    if hasattr(config, 'wakeTime'):
-        setWakeUp(config.wakeTime)
-    xbmc = xbmcCommand("System.Shutdown")
-    if "OK" in xbmc['result']:
-       logging.info("Will shutdown now through XBMC.")
+    if not DEBUG:
+        if hasattr(config, 'wakeTime'):
+            setWakeUp(config.wakeTime)
+        xbmc = xbmcCommand("System.Shutdown")
+        if "OK" in xbmc['result']:
+           logging.info("Will shutdown now through XBMC.")
+        else:
+            logging.info("Will shutdown now using system command.")
+            Popen(["shutdown","-h","now"])
     else:
-        logging.info("Will shutdown now using system command.")
-        Popen(["shutdown","-h","now"])
+        logging.debug("Would shutdown now.")
 
 ###########
 # Methods #
@@ -147,6 +152,17 @@ def xbmcIsPlaying():
         return True
     else:
         logging.debug("XBMC is not playing.")
+        return False
+
+def xbmcIsScanning():
+    if not hasattr(config, 'xbmc'):
+        return False
+    xbmc = xbmcCommand("XBMC.GetInfoBooleans", {"booleans": ["library.isscanning"]})
+    if xbmc['result']['library.isscanning']:
+        logging.info("XBMC is updating the library.")
+        return True
+    else:
+        logging.debug("XBMC is not updating the library.")
         return False
 
 def activeConnections():
@@ -235,16 +251,18 @@ if __name__ == '__main__':
 
     XBMC_IDLE    = xbmcIsIdle()
     XBMC_PLAYING = xbmcIsPlaying()
+    XBMC_SCAN    = xbmcIsScanning()
     CON_ACTIVE   = activeConnections()
     SAB_ACTIVE   = activeSABnzbd()
 
     logging.debug("XBMC_IDLE:    %s" % XBMC_IDLE)
     logging.debug("XBMC_PLAY:    %s" % XBMC_PLAYING)
+    logging.debug("XBMC_SCAN:    %s" % XBMC_SCAN)
     logging.debug("CON_ACTIVE:   %s" % CON_ACTIVE)
     logging.debug("SAB_ACTIVE:   %s" % SAB_ACTIVE)
 
     pruneLog()
 
-    if XBMC_IDLE and not XBMC_PLAYING and not CON_ACTIVE and not SAB_ACTIVE:
+    if XBMC_IDLE and not XBMC_PLAYING and not XBMC_SCAN and not CON_ACTIVE and not SAB_ACTIVE:
         shutdown()
 
