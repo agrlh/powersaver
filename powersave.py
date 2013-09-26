@@ -48,6 +48,14 @@ def xbmcCommand(method,params=None):
     result = json.loads(response.read())
     return result
 
+def couchpotatoCommand(command):
+    # command as string
+    tatoUrl = "http://%s:%s/api/%s/%s" % (config.tato['host'], config.tato['port'], config.tato['api'], command)
+    req = urllib2.Request(url=tatoUrl)
+    response = urllib2.urlopen(req)
+    result = json.loads(response.read())
+    return result
+
 def getHostname(ipaddress):
     host = Popen(['nslookup',ipaddress], stdout=PIPE)
     host = host.communicate(0)[0].split("\t")[-1].replace("\n","") # third line of nslookup command contains the desired information
@@ -123,16 +131,16 @@ def shutdown():
 # Methods #
 ###########
 
-def xbmcIsIdle():
+def activeXBMC():
     if not hasattr(config, 'xbmc'):
-        return True
+        return False
     xbmc = xbmcCommand("XBMC.GetInfoBooleans", {"booleans": ["System.ScreenSaverActive"]})
     if xbmc['result']['System.ScreenSaverActive']:
         logging.debug("DEBUG :: XBMC screensaver is active.")
-        return True
+        return False
     else:
         logging.info("XBMC is or was in use.")
-        return False
+        return True
 
 def xbmcIsPlaying():
     if not hasattr(config, 'xbmc'):
@@ -241,6 +249,21 @@ def activeSABnzbd():
             logging.info("SABnzbd is paused: %s [%.0f%%]" % (job['filename'], progress))
         return True
 
+def activeCouchPotato():
+    if not hasattr(config, 'tato'):
+        return False
+    progress = couchpotatoCommand('manage.progress')['progress']
+    if progress:
+        for path in progress.keys():
+            if progress[path]['total'] and progress[path]['to_go']:
+                prg = float(progress[path]['total'] - progress[path]['to_go']) / float(progress[path]['total']) * 100
+                logging.info('CouchPotato is updating the library (%s) [%.0f%%]' % (path, prg))
+            else:
+                logging.info('CouchPotato is updating the library.')
+        return True
+    else:
+        return False
+
 
 ########
 # MAIN #
@@ -249,20 +272,19 @@ if __name__ == '__main__':
 
     logging.info(":: :: :: :: :: :: :: :: :: :: ")
 
-    XBMC_IDLE    = xbmcIsIdle()
-    XBMC_PLAYING = xbmcIsPlaying()
-    XBMC_SCAN    = xbmcIsScanning()
-    CON_ACTIVE   = activeConnections()
-    SAB_ACTIVE   = activeSABnzbd()
+    STATUS = {}
+    STATUS['XBMC_ACTIVE']  = activeXBMC()
+    STATUS['XBMC_PLAYING'] = xbmcIsPlaying()
+    STATUS['XBMC_SCAN']    = xbmcIsScanning()
+    STATUS['CON_ACTIVE']   = activeConnections()
+    STATUS['SAB_ACTIVE']   = activeSABnzbd()
+    STATUS['TATO_ACTIVE']  = activeCouchPotato()
 
-    logging.debug("DEBUG :: XBMC_IDLE:    %s" % XBMC_IDLE)
-    logging.debug("DEBUG :: XBMC_PLAY:    %s" % XBMC_PLAYING)
-    logging.debug("DEBUG :: XBMC_SCAN:    %s" % XBMC_SCAN)
-    logging.debug("DEBUG :: CON_ACTIVE:   %s" % CON_ACTIVE)
-    logging.debug("DEBUG :: SAB_ACTIVE:   %s" % SAB_ACTIVE)
-
+    for STATUS_STR in STATUS.keys():
+        logging.debug("DEBUG :: %s:    %s" % (STATUS_STR, STATUS[STATUS_STR]))
+    
     pruneLog()
 
-    if XBMC_IDLE and not XBMC_PLAYING and not XBMC_SCAN and not CON_ACTIVE and not SAB_ACTIVE:
+    if True not in list(set(STATUS.values())):
         shutdown()
 
