@@ -64,7 +64,14 @@ def couchpotatoCommand(command):
     # command as string
     tatoUrl = "http://%s:%s/api/%s/%s" % (config.tato['host'], config.tato['port'], config.tato['api'], command)
     req = urllib2.Request(url=tatoUrl)
-    response = urllib2.urlopen(req)
+    try:
+        response = urllib2.urlopen(req, timeout=10)
+    except urllib2.URLError:
+        logging.debug("DEBUG :: Couchpotato urlopen error.")
+        return None
+    except socket.timeout:
+        logging.debug("DEBUG :: Couchpotato timeout error.")
+        return None
     result = json.loads(response.read())
     return result
 
@@ -271,8 +278,9 @@ def activeSABnzbd():
 def activeCouchPotato():
     if not hasattr(config, 'tato'):
         return False
-    progress = couchpotatoCommand('manage.progress')['progress']
-    if progress:
+    progress = couchpotatoCommand('manage.progress')
+    if progress is not None:
+        progress = progress['progress']
         for path in progress.keys():
             if progress[path]['total'] and progress[path]['to_go']:
                 prg = float(progress[path]['total'] - progress[path]['to_go']) / float(progress[path]['total']) * 100
