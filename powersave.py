@@ -51,11 +51,11 @@ def xbmcCommand(method,params=None):
     req.add_header("Authorization", "Basic %s" % base64string)
     try:
         response = urllib2.urlopen(req, timeout=10)
-    except urllib2.URLError, e:
-        logging.debug("DEBUG :: XBMC urlopen error: %r." % e)
+    except urllib2.URLError:
+        logging.debug("DEBUG :: XBMC urlopen error.")
         return None
-    except socket.timeout, e:
-        logging.debug("DEBUG :: XBMC timeout error: %r." % e)
+    except socket.timeout:
+        logging.debug("DEBUG :: XBMC timeout error.")
         return None
     result = json.loads(response.read())
     return result
