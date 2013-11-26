@@ -27,17 +27,19 @@ logging.basicConfig(filename=config.logFile,
                     format='%(asctime)s :: %(message)s',
                     datefmt='%b %d %H:%M:%S')
 
+
 ####################
 # Helper functions #
 ####################
 
-def xbmcCommand(method,params=None):
+
+def xbmcCommand(method, params=None):
     # method as string
     # params as dictionary
     data = {"jsonrpc": "2.0",
-                "id": "powersave script"}
+            "id": "powersave_script"}
     data['method'] = method
-    if params != None:
+    if params is not None:
         data['params'] = params
     # convert to json
     jsondata = json.dumps(data)
@@ -60,6 +62,7 @@ def xbmcCommand(method,params=None):
     result = json.loads(response.read())
     return result
 
+
 def couchpotatoCommand(command):
     # command as string
     tatoUrl = "http://%s:%s/api/%s/%s" % (config.tato['host'], config.tato['port'], config.tato['api'], command)
@@ -74,6 +77,7 @@ def couchpotatoCommand(command):
         return None
     result = json.loads(response.read())
     return result
+
 
 def getHostname(ipaddress):
     host = Popen(['nslookup',ipaddress], stdout=PIPE)
@@ -97,6 +101,7 @@ def getActiveSMBShares(ipaddress):
                     shares.append(smbInfo.group(1))
     return shares
 
+
 def getWakeTime(wakeTime):
     # wakeTime in 24h format string: "hh:mm"
     if wakeTime.split(':'):
@@ -116,6 +121,7 @@ def getWakeTime(wakeTime):
         wake += timedelta(days=1)
         return int(wake.strftime('%s'))
 
+
 def setWakeUp(wakeTime):
     wtime = getWakeTime(wakeTime)
     rtc = Popen(["rtcwake","-m","no","-t %s" % wtime], stdout=PIPE, stderr=PIPE)
@@ -126,6 +132,7 @@ def setWakeUp(wakeTime):
         logging.debug("DEBUG :: ERROR setting up wake-up time!")
         for s in rtc:
             logging.debug("DEBUG ::   " + s.replace('\n',''))
+
 
 def pruneLog():
     lines = Popen(["tail","-n",str(config.logLines),config.logFile], stdout = PIPE)
@@ -146,9 +153,11 @@ def shutdown():
     else:
         logging.debug("DEBUG :: Would shutdown now.")
 
+
 ###########
 # Methods #
 ###########
+
 
 def activeXBMC():
     if not hasattr(config, 'xbmc'):
@@ -162,6 +171,7 @@ def activeXBMC():
     else:
         logging.info("XBMC is or was in use.")
         return True
+
 
 def xbmcIsPlaying():
     if not hasattr(config, 'xbmc'):
@@ -199,6 +209,7 @@ def xbmcIsScanning():
         logging.debug("DEBUG :: XBMC is not updating the library.")
         return False
 
+
 def activeConnections():
     active = False
     connections = Popen(["netstat","-tn"], stdout=PIPE, stderr=PIPE)
@@ -232,6 +243,7 @@ def activeConnections():
                     active = True
                     logging.info("Found %i %s connection%s from %s." % (n,config.services[port], "s" if n > 1 else "", getHostname(host)))
     return active
+
 
 def activeSABnzbd():
     if not hasattr(config, 'sabapi'):
@@ -282,6 +294,7 @@ def activeSABnzbd():
             logging.info("SABnzbd is paused: %s [%.0f%%]" % (job['filename'], progress))
         return True
 
+
 def activeCouchPotato():
     if not hasattr(config, 'tato'):
         return False
@@ -316,7 +329,7 @@ if __name__ == '__main__':
 
     for STATUS_STR in STATUS.keys():
         logging.debug("DEBUG :: %s:    %s" % (STATUS_STR, STATUS[STATUS_STR]))
-    
+
     pruneLog()
 
     if True not in list(set(STATUS.values())):
