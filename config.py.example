@@ -1,15 +1,15 @@
 # XBMC settings
-xbmc = {"username":"xbmc", 
+xbmc = {"username":"xbmc",
         "password":"xbmc",
         "host"    :"localhost",
         "port"    :"8080" }
 # CouchPotato settings
 tato = {"host": "localhost",
         "port": "5050",
-        "api": "12345" }
+        "apikey": "12345" }
 # SABnzbd api key
-sabapi = "12345"
-# The following ports/services will be checked for connected devices on the 
+sabApiKey = "12345"
+# The following ports/services will be checked for connected devices on the
 # local network
 services = {"2222": "SSH",
             "445":  "SAMBA",

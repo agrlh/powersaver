@@ -65,7 +65,7 @@ def xbmcCommand(method, params=None):
 
 def couchpotatoCommand(command):
     # command as string
-    tatoUrl = "http://%s:%s/api/%s/%s" % (config.tato['host'], config.tato['port'], config.tato['api'], command)
+    tatoUrl = "http://%s:%s/api/%s/%s" % (config.tato['host'], config.tato['port'], config.tato['apikey'], command)
     req = urllib2.Request(url=tatoUrl)
     try:
         response = urllib2.urlopen(req, timeout=10)
@@ -246,10 +246,10 @@ def activeConnections():
 
 
 def activeSABnzbd():
-    if not hasattr(config, 'sabapi'):
+    if not hasattr(config, 'sabApiKey'):
         return False
     saburl = 'http://localhost:8080/sabnzbd/api'
-    params = {'apikey': config.sabapi,
+    params = {'apikey': config.sabApiKey,
               'mode':   'qstatus',
               'output': 'json'}
     urldata = urllib.urlencode(params)
@@ -266,7 +266,7 @@ def activeSABnzbd():
     if result['state'] == u'IDLE':
         logging.debug("DEBUG :: SABnzbd is IDLE. Checking history for processing jobs.")
         # do history check if processing is going on
-        params = {'apikey': config.sabapi,
+        params = {'apikey': config.sabApiKey,
                   'mode':   'history',
                   'output': 'json',
                   'start':  0,
