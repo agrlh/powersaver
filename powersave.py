@@ -301,6 +301,8 @@ def activeCouchPotato():
     progress = couchpotatoCommand('manage.progress')
     if progress is not None:
         progress = progress['progress']
+        if progress is False:
+            return False
         for path in progress.keys():
             if progress[path]['total'] and progress[path]['to_go']:
                 prg = float(progress[path]['total'] - progress[path]['to_go']) / float(progress[path]['total']) * 100
