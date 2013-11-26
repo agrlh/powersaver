@@ -2,12 +2,14 @@
 import re
 from datetime import datetime, timedelta
 from subprocess import Popen, PIPE
-import urllib2, urllib
+import urllib2
+import urllib
 import json
 import base64
 import logging
 import sys
 import config
+import socket
 
 ##############################
 # PARSE ARGS - Set log level #
@@ -40,11 +42,21 @@ def xbmcCommand(method,params=None):
     # convert to json
     jsondata = json.dumps(data)
     # xbmc request
-    xbmcUrl = "http://%s:%s/jsonrpc" % (config.xbmc['host'], config.xbmc['port'])
-    req = urllib2.Request(url=xbmcUrl, data=jsondata, headers={'Content-Type': 'application/json'})
-    base64string = base64.encodestring('%s:%s' % (config.xbmc['username'], config.xbmc['password'])).replace('\n', '')
+    xbmcUrl = "http://%s:%s/jsonrpc" \
+        % (config.xbmc['host'], config.xbmc['port'])
+    req = urllib2.Request(url=xbmcUrl,
+                          data=jsondata,
+                          headers={'Content-Type': 'application/json'})
+    base64string = base64.encodestring('%s:%s' % (config.xbmc['username'],config.xbmc['password'])).replace('\n', '')
     req.add_header("Authorization", "Basic %s" % base64string)
-    response = urllib2.urlopen(req)
+    try:
+        response = urllib2.urlopen(req, timeout=10)
+    except urllib2.URLError, e:
+        logging.debug("DEBUG :: XBMC urlopen error: %r." % e)
+        return None
+    except socket.timeout, e:
+        logging.debug("DEBUG :: XBMC timeout error: %r." % e)
+        return None
     result = json.loads(response.read())
     return result
 
@@ -135,8 +147,10 @@ def activeXBMC():
     if not hasattr(config, 'xbmc'):
         return False
     xbmc = xbmcCommand("XBMC.GetInfoBooleans", {"booleans": ["System.ScreenSaverActive"]})
+    if xbmc is None:
+        return False
     if xbmc['result']['System.ScreenSaverActive']:
-        logging.debug("DEBUG :: XBMC screensaver is active.")
+        logging.debug("DEBUG :: XBMC is not in use.")
         return False
     else:
         logging.info("XBMC is or was in use.")
@@ -146,6 +160,8 @@ def xbmcIsPlaying():
     if not hasattr(config, 'xbmc'):
         return False
     xbmc = xbmcCommand("Player.GetActivePlayers")
+    if xbmc is None:
+        return False
     if len(xbmc['result']) > 0:
         playerid = xbmc['result'][0]['playerid']
         player = xbmcCommand("Player.GetItem", { "properties": ["title", "album", "artist", "season", "episode", "showtitle",], "playerid": playerid })
@@ -162,10 +178,13 @@ def xbmcIsPlaying():
         logging.debug("DEBUG :: XBMC is not playing.")
         return False
 
+
 def xbmcIsScanning():
     if not hasattr(config, 'xbmc'):
         return False
     xbmc = xbmcCommand("XBMC.GetInfoBooleans", {"booleans": ["library.isscanning"]})
+    if xbmc is None:
+        return False
     if xbmc['result']['library.isscanning']:
         logging.info("XBMC is updating the library.")
         return True
