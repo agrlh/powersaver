@@ -242,7 +242,14 @@ def activeSABnzbd():
               'output': 'json'}
     urldata = urllib.urlencode(params)
     req = urllib2.Request(url=saburl,data=urldata)
-    response = urllib2.urlopen(req)
+    try:
+        response = urllib2.urlopen(req, timeout=10)
+    except urllib2.URLError:
+        logging.debug("DEBUG :: SABnzbd urlopen error.")
+        return False
+    except socket.timeout:
+        logging.debug("DEBUG :: SABnzbd timeout error.")
+        return False
     result = json.loads(response.read())
     if result['state'] == u'IDLE':
         logging.debug("DEBUG :: SABnzbd is IDLE. Checking history for processing jobs.")
